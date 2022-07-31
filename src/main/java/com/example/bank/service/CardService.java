@@ -8,6 +8,7 @@ import com.example.bank.repository.CardRepository;
 import com.example.bank.repository.ClientRepository;
 import com.example.bank.repository.TransfersHistoryRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
@@ -22,10 +23,15 @@ public class CardService {
     ClientRepository clientRepository;
     @Autowired
     TransfersHistoryRepository transfersHistoryRepository;
+    @Value("${upload.path}")
+    private String upload;
 
 
-    public void file(Check check) throws IOException {
-        File file = new File(UUID.randomUUID().toString());
+    public void file(Check check) throws IOException { //Создание чеков
+        File file = new File(upload+ "/" + UUID.randomUUID());
+
+
+       // multipartFile.transferTo(new File(upload + "/" + resultFileName));// сохраняет все на комп
         BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(file));
 
         bufferedWriter.write("Date of operation" + " " + check.getDate());
@@ -53,20 +59,21 @@ public class CardService {
     }
 
     public Card findCardById(Long id) {
-        Card card = cardRepository.findById(id).get();
-        return card;
+        return cardRepository.findById(id).orElse(null);
+
     }
 
-    public Card findCardByNumber(String cardnumer) {
-        Card card = cardRepository.findByCardNumber(cardnumer);
-        return card;
+    public Card findCardByNumber(String cardNumber) {
+        return cardRepository.findByCardNumber(cardNumber);
+
     }
 
     public void transfersum(String name, Long id, String cardnumber, BigDecimal sum) throws IOException {
         Card cardSend = cardRepository.findByCardNumber(cardnumber);// карта на которую деньги зачисляются
-        Card cardWith = cardRepository.findById(id).get(); // карта с которой деньги списываются
+        Card cardWith = cardRepository.findById(id).orElse(null); // карта с которой деньги списываются
         String number = UUID.randomUUID().toString();
         number = number.substring(0, number.length() / 2);
+        assert cardWith != null;
         if (cardWith.getBalance().compareTo(sum) >= 0) {
             Date date = new Date();
 
